@@ -8,22 +8,31 @@
 #define DEBUG
 #ifdef DEBUG
     #define LOG(fmt, args...) \
-    printf(fmt, ##args);
+    do{\
+        printf("%s %s:%d: ",__FILE__, __FUNCTION__, __LINE__);\
+        printf(fmt, ##args);\
+        fflush(stdout);\
+        }while(0)
 #else
     #define LOG(fmt, args...)
 #endif
 
 #define TX_SLOT_SIZE 4096
 #define TX_SLOT_NUM 31
-#define PCAP_SIZE 9923
+
 #define BANDWIDTH 10
 #define time_delta 40
 #define time_delta_burst_start 1390
 #define burst_interval_min 480000000
 #define burst_interval_max 510000000
 
-#define update_since (TX_SLOT_NUM/2)
-#define cur_update (TX_SLOT_NUM-update_since-1)
+/* when NUM/2 is sent out, preload first one*/
+#define update_slot_until (TX_SLOT_NUM/2)
+#define cur_update (TX_SLOT_NUM-update_slot_until-1)
+
+#ifndef MTU
+#define MTU 1500
+#endif
 
 
 #ifndef max
