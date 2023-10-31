@@ -2,11 +2,10 @@
 
 #include "exareplay_api.h"
 #include "slot.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <pcap.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef DEBUG
 #define DEBUG
 #endif
-

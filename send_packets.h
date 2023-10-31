@@ -1,8 +1,8 @@
 #pragma once
 
-#include "exareplay_api.h"
-#include "common.h"
 #include "defines.h"
+#include "common.h"
+#include "exareplay_api.h"
 #include <pcap.h>
 
 void send_packets(exareplay_t *ctx, pcap_t *pcap, int idx);

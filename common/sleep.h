@@ -1,7 +1,6 @@
 #pragma once
 #include "rdtsc.h"
 
-
 /* pretty damn accurate. */
 static inline void
 rdtsc_sleep(unsigned long long ticks)

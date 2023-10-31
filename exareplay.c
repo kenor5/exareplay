@@ -4,8 +4,8 @@
 exareplay_t *ctx;
 
 int
-main(int argc, char* argv[]) {
-
+main(int argc, char *argv[])
+{
     int rcode;
 
     fflush(NULL);
@@ -36,6 +36,6 @@ main(int argc, char* argv[]) {
     device_close(ctx);
 
     exareplay_free(ctx);
-    
+
     return 0;
 }

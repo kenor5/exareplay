@@ -7,14 +7,14 @@
 
 #define DEBUG
 #ifdef DEBUG
-    #define LOG(fmt, args...) \
-    do{\
-        printf("%s %s:%d: ",__FILE__, __FUNCTION__, __LINE__);\
-        printf(fmt, ##args);\
-        fflush(stdout);\
-        }while(0)
+#define LOG(fmt, args...)                                                                                              \
+    do {                                                                                                               \
+        printf("%s %s:%d: ", __FILE__, __FUNCTION__, __LINE__);                                                        \
+        printf(fmt, ##args);                                                                                           \
+        fflush(stdout);                                                                                                \
+    } while (0)
 #else
-    #define LOG(fmt, args...)
+#define LOG(fmt, args...)
 #endif
 
 #define TX_SLOT_SIZE 4096
@@ -27,13 +27,12 @@
 #define burst_interval_max 510000000
 
 /* when NUM/2 is sent out, preload first one*/
-#define update_slot_until (TX_SLOT_NUM/2)
-#define cur_update (TX_SLOT_NUM-update_slot_until-1)
+#define update_slot_until (TX_SLOT_NUM / 2)
+#define cur_update (TX_SLOT_NUM - update_slot_until - 1)
 
 #ifndef MTU
 #define MTU 1500
 #endif
-
 
 #ifndef max
 #define max(a, b)                                                                                                      \

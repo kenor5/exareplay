@@ -1,11 +1,13 @@
 #include "exareplay_api.h"
 #include "common.h"
 #include "slot.h"
-#include <stdlib.h>
 #include <getopt.h>
+#include <stdlib.h>
 
-exareplay_t* exareplay_init() {
-    exareplay_t* ctx;
+exareplay_t *
+exareplay_init()
+{
+    exareplay_t *ctx;
     ctx = safe_malloc(sizeof(exareplay_t));
     ctx->opts = safe_malloc(sizeof(exareplay_opt_t));
 
@@ -21,12 +23,16 @@ exareplay_t* exareplay_init() {
     return ctx;
 }
 
-void exareplay_free(exareplay_t *ctx) {
+void
+exareplay_free(exareplay_t *ctx)
+{
     safe_free(ctx->opts);
     safe_free(ctx);
 }
 
-void device_init(exareplay_t *ctx) {
+void
+device_init(exareplay_t *ctx)
+{
     device_t *device = safe_malloc(sizeof(device_t));
     if ((device->exanic = exanic_acquire_handle(ctx->opts->device)) == NULL) {
         fprintf(stderr, "%s: %s\n", ctx->opts->device, exanic_get_last_error());
@@ -42,14 +48,17 @@ void device_init(exareplay_t *ctx) {
     ctx->device = device;
 }
 
-void device_close(exareplay_t *ctx) {
+void
+device_close(exareplay_t *ctx)
+{
     device_t *device = ctx->device;
     exanic_release_tx_buffer(device->tx);
     exanic_release_handle(device->exanic);
 }
 
-
-int exareplay_parse_args(exareplay_t *ctx, int argc, char* argv[]) {
+int
+exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
+{
     int c;
     if (argc < 2)
         goto usage_err;
@@ -74,7 +83,7 @@ int exareplay_parse_args(exareplay_t *ctx, int argc, char* argv[]) {
         }
     }
     return 0;
-    
+
 usage_err:
     fprintf(stderr, "Usage: %s \n", argv[0]);
     fprintf(stderr, "  -r <input_file>    input file name\n");
@@ -84,7 +93,9 @@ usage_err:
     return -1;
 }
 
-void pcap_info_init(exareplay_t *ctx) {
+void
+pcap_info_init(exareplay_t *ctx)
+{
     uint32_t pcap_size;
 
     /* get pcap size */
@@ -101,7 +112,9 @@ void pcap_info_init(exareplay_t *ctx) {
     }
 }
 
-void pcap_info_free(exareplay_t *ctx) {
+void
+pcap_info_free(exareplay_t *ctx)
+{
     for (int i = 0; i < ctx->pcap_info->size; i++) {
         safe_free(ctx->pcap_info->data[i]);
     }
@@ -111,8 +124,9 @@ void pcap_info_free(exareplay_t *ctx) {
     safe_free(ctx->pcap_info);
 }
 
-
-uint32_t get_pcap_size(char *filename) {
+uint32_t
+get_pcap_size(char *filename)
+{
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t *cap;
     struct pcap_pkthdr *pkt_header = safe_malloc(sizeof(struct pcap_pkthdr));
@@ -130,10 +144,11 @@ uint32_t get_pcap_size(char *filename) {
     }
     pcap_close(cap);
     return size;
-
 }
 
-void exareplay_replay(exareplay_t *ctx) {
+void
+exareplay_replay(exareplay_t *ctx)
+{
     exanic_tx_t *tx = ctx->device->tx;
 
     uint32_t pcap_num = ctx->pcap_info->size;
@@ -144,13 +159,13 @@ void exareplay_replay(exareplay_t *ctx) {
     register int i;
     register uint64_t last_time = 0;
     register uint64_t cur_time_interval = len[0];
-    
+
     for (i = 0; i < pcap_num;) {
-        if (rdtsc()-last_time >= cur_time_interval) {
-            trigger_slot_send(tx, i%TX_SLOT_NUM);
+        if (rdtsc() - last_time >= cur_time_interval) {
+            trigger_slot_send(tx, i % TX_SLOT_NUM);
             last_time = rdtsc();
             if (i > update_slot_until && i + cur_update < pcap_num) {
-                fill_slot(ctx, i+cur_update, (i+cur_update)%TX_SLOT_NUM);
+                fill_slot(ctx, i + cur_update, (i + cur_update) % TX_SLOT_NUM);
                 flush_wc_buffers(tx);
             }
             cur_time_interval = time_interval[++i];
