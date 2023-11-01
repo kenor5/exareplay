@@ -36,14 +36,14 @@ device_init(exareplay_t *ctx)
     device_t *device = safe_malloc(sizeof(device_t));
     if ((device->exanic = exanic_acquire_handle(ctx->opts->device)) == NULL) {
         fprintf(stderr, "%s: %s\n", ctx->opts->device, exanic_get_last_error());
-        return;
+        exit(-1);
     }
 
     /* Reserve some space in the TX buffer. */
     device->tx = exanic_acquire_tx_buffer(device->exanic, ctx->opts->port, TX_SLOT_NUM * TX_SLOT_SIZE);
     if (!device->tx) {
         fprintf(stderr, "exanic_acquire_tx: %s\n", exanic_get_last_error());
-        return;
+        exit(-1);
     }
     ctx->device = device;
 }
@@ -90,7 +90,7 @@ usage_err:
     fprintf(stderr, "  -i <device:port>   NIC device and port, for example 'exanic0:0'\n");
     fprintf(stderr, "  -d                 replay two file at the same time\n");
     fprintf(stderr, "  -s <interval>      skip large time interval in pcap\n");
-    return -1;
+    exit(-1);
 }
 
 void

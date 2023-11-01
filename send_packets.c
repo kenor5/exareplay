@@ -14,7 +14,7 @@ load_pcap(exareplay_t *ctx)
     cap = pcap_open_offline_with_tstamp_precision(ctx->opts->input_name, PCAP_TSTAMP_PRECISION_NANO, errbuf);
     if (cap == NULL) {
         fprintf(stderr, "error while opening pcap file\n");
-        return;
+        exit(-1);
     }
 
     idx = 0;
