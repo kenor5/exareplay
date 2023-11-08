@@ -61,5 +61,7 @@ int exareplay_parse_args(exareplay_t *, int argc, char *argv[]);
 void exareplay_replay(exareplay_t *);
 
 void pcap_info_init(exareplay_t *ctx);
+
 void pcap_info_free(exareplay_t *ctx);
+
 uint32_t get_pcap_size(char *filename);
