@@ -1,7 +1,6 @@
 #pragma once
 #include "exareplay_api.h"
 
-
 /* Get a pointer to the payload for a given slot. */
 char *get_slot_payload(exanic_tx_t *tx, int slot);
 

@@ -1,5 +1,4 @@
 #include "exareplay_api.h"
-
 #include "slot.h"
 #include <getopt.h>
 #include <stdlib.h>
@@ -119,7 +118,6 @@ pcap_info_init(exareplay_t *ctx)
 
     /* malloc pcap memory */
     ctx->pcap_info = ringbuffer_create(sizeof(pcap_info_t), pcap_size);
-    
 }
 
 void
@@ -149,4 +147,3 @@ get_pcap_size(char *filename)
     pcap_close(cap);
     return size;
 }
-

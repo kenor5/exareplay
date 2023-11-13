@@ -61,7 +61,7 @@ fill_slot(exareplay_t *ctx)
     while (!__sync_bool_compare_and_swap(&ctx->slot_info.size, oldsize, oldsize + 1)) {
         oldsize = ctx->slot_info.size;
     }
-    
+
     ctx->slot_info.tail = (ctx->slot_info.tail + 1) % ctx->slot_info.cap;
 }
 

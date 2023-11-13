@@ -1,7 +1,7 @@
 #pragma once
 
-#include <stdlib.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 typedef struct ringbuffer ringbuffer_t;
 
