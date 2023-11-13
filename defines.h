@@ -19,7 +19,11 @@
 
 #define TX_SLOT_SIZE 4096
 #define TX_SLOT_NUM 31
+#define DEFAULT_MEM_USE 0x100000
 
+#define THREAD_NUM 3
+
+#define RING_BUFFER_ELEMENT_SIZE 0x800 /* must be a power of 2 */
 #define BANDWIDTH 10
 #define time_delta 40
 #define time_delta_burst_start 1390
@@ -92,7 +96,7 @@
 
 #define TIMESPEC_TO_MILLISEC(x) (((x)->tv_sec * 1000) + ((x)->tv_nsec / 1000000))
 #define TIMESPEC_TO_MICROSEC(x) (((x)->tv_sec * 1000000) + (x)->tv_nsec / 1000)
-#define TIMESPEC_TO_NANOSEC(x) ((u_int64_t)((x)->tv_sec * 1000000000) + ((u_int64_t)(x)->tv_nsec))
+#define TIMESPEC_TO_NANOSEC(x) ((u_int64_t)((x).tv_sec * 1000000000) + ((u_int64_t)(x).tv_usec))
 
 #define TIMEVAL_SET(a, b)                                                                                              \
     do {                                                                                                               \

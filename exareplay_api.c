@@ -1,5 +1,5 @@
 #include "exareplay_api.h"
-#include "common.h"
+
 #include "slot.h"
 #include <getopt.h>
 #include <stdlib.h>
@@ -10,16 +10,18 @@ exareplay_init()
     exareplay_t *ctx;
     ctx = safe_malloc(sizeof(exareplay_t));
     ctx->opts = safe_malloc(sizeof(exareplay_opt_t));
-
     /* send one file */
     ctx->opts->dualmode = false;
-
     /* disable skip any interval*/
     ctx->opts->skip_interval = false;
-
     ctx->opts->skip_interval_size = 0x7fffffff;
-
     ctx->opts->input_name = NULL;
+    ctx->opts->mem_size = DEFAULT_MEM_USE;
+    ctx->opts->device = "exanic0";
+    ctx->opts->port = 0;
+
+    ctx->load_complete = false;
+
     return ctx;
 }
 
@@ -62,7 +64,8 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
     int c;
     if (argc < 2)
         goto usage_err;
-    while ((c = getopt(argc, argv, "r:i:ds:h")) != -1) {
+
+    while ((c = getopt(argc, argv, "r:i:ds:m:h")) != -1) {
         switch (c) {
         case 'r':
             ctx->opts->input_name = optarg;
@@ -78,6 +81,15 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
             ctx->opts->skip_interval = true;
             ctx->opts->skip_interval_size = atoi(optarg);
             break;
+        case 'm':
+            if (optarg[strlen(optarg) - 1] == 'G') {
+                ctx->opts->mem_size = atoi(optarg) * 1024 * 1024 * 1024;
+            } else if (optarg[strlen(optarg) - 1] == 'M') {
+                ctx->opts->mem_size = atoi(optarg) * 1024 * 1024;
+            } else {
+                ctx->opts->mem_size = atoi(optarg);
+            }
+            break;
         default:
             goto usage_err;
         }
@@ -90,38 +102,25 @@ usage_err:
     fprintf(stderr, "  -i <device:port>   NIC device and port, for example 'exanic0:0'\n");
     fprintf(stderr, "  -d                 replay two file at the same time\n");
     fprintf(stderr, "  -s <interval>      skip large time interval in pcap\n");
+    fprintf(stderr, "  -m <memory>        memory to use, default 1G\n");
     exit(-1);
 }
 
 void
 pcap_info_init(exareplay_t *ctx)
 {
-    uint32_t pcap_size;
-
-    /* get pcap size */
-    pcap_size = get_pcap_size(ctx->opts->input_name);
+    uint32_t memory_limit = ctx->opts->mem_size;
+    uint32_t pcap_size = memory_limit / sizeof(pcap_info_t);
 
     /* malloc pcap memory */
-    ctx->pcap_info = safe_malloc(sizeof(pcap_info_t));
-    ctx->pcap_info->size = pcap_size;
-    ctx->pcap_info->len = safe_malloc(sizeof(u_int32_t) * pcap_size);
-    ctx->pcap_info->time_interval = safe_malloc(sizeof(u_int64_t) * pcap_size);
-    ctx->pcap_info->data = safe_malloc(sizeof(char *) * pcap_size);
-    for (int i = 0; i < pcap_size; i++) {
-        ctx->pcap_info->data[i] = safe_malloc(sizeof(char) * MTU);
-    }
+    ctx->pcap_info = ringbuffer_create(sizeof(pcap_info_t), pcap_size);
+    
 }
 
 void
 pcap_info_free(exareplay_t *ctx)
 {
-    for (int i = 0; i < ctx->pcap_info->size; i++) {
-        safe_free(ctx->pcap_info->data[i]);
-    }
-    safe_free(ctx->pcap_info->data);
-    safe_free(ctx->pcap_info->len);
-    safe_free(ctx->pcap_info->time_interval);
-    safe_free(ctx->pcap_info);
+    ringbuffer_destroy(ctx->pcap_info);
 }
 
 uint32_t
@@ -146,29 +145,3 @@ get_pcap_size(char *filename)
     return size;
 }
 
-void
-exareplay_replay(exareplay_t *ctx)
-{
-    exanic_tx_t *tx = ctx->device->tx;
-
-    uint32_t pcap_num = ctx->pcap_info->size;
-    uint64_t *time_interval = ctx->pcap_info->time_interval;
-    uint32_t *len = ctx->pcap_info->len;
-    // char **pcap_data = ctx->pcap_info->data;
-
-    register int i;
-    register uint64_t last_time = 0;
-    register uint64_t cur_time_interval = len[0];
-
-    for (i = 0; i < pcap_num;) {
-        if (rdtsc() - last_time >= cur_time_interval) {
-            trigger_slot_send(tx, i % TX_SLOT_NUM);
-            last_time = rdtsc();
-            if (i > update_slot_until && i + cur_update < pcap_num) {
-                fill_slot(ctx, i + cur_update, (i + cur_update) % TX_SLOT_NUM);
-                flush_wc_buffers(tx);
-            }
-            cur_time_interval = time_interval[++i];
-        }
-    }
-}

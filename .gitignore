@@ -76,6 +76,8 @@ src/config.h.in
 *.tmproj
 *.dirstamp
 tcpdump.debug
+out.txt
+test.*
 
 # Misc files
 tcpreplay.spec

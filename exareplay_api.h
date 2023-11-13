@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/types.h>
+#include "common.h"
 
 typedef struct exareplay_opt_s {
     /* input filename */
@@ -24,6 +25,9 @@ typedef struct exareplay_opt_s {
     /* if 'skip_interval' is set TRUE, interval larger than it will be skipped */
     u_int32_t skip_interval_size;
 
+    /* memory to use */
+    uint32_t mem_size;
+
 } exareplay_opt_t;
 
 typedef struct device_s {
@@ -33,17 +37,36 @@ typedef struct device_s {
 } device_t;
 
 typedef struct pcap_info_s {
-    char **data;
-    u_int32_t *len;
-    u_int64_t *time_interval;
-    uint32_t size;
-} pcap_info_t;
+    
+    /* pcap length */
+    u_int32_t len;
+
+    /* pcap timestamp interval, in tick format*/
+    u_int64_t time_interval;
+
+    /* pcap data */
+    char data[MTU];
+
+}pcap_info_t;
+
+typedef struct slot_s{
+    uint32_t cap;
+    volatile uint32_t size;
+    uint32_t head;
+    uint32_t tail;
+}slot_t;
 
 typedef struct exareplay_s {
-    exareplay_opt_t *opts;
-    device_t *device;
-    pcap_info_t *pcap_info;
 
+    exareplay_opt_t *opts;
+
+    device_t *device;
+
+    ringbuffer_t *pcap_info;
+
+    slot_t slot_info;
+    /* whether disk data is loaded, only set in thread_disk2memory */
+    volatile bool load_complete;
 } exareplay_t;
 
 exareplay_t *exareplay_init();
@@ -57,8 +80,6 @@ void device_close(exareplay_t *);
 int exareplay_set_dualmode(exareplay_t *, bool);
 
 int exareplay_parse_args(exareplay_t *, int argc, char *argv[]);
-
-void exareplay_replay(exareplay_t *);
 
 void pcap_info_init(exareplay_t *ctx);
 
