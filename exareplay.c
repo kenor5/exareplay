@@ -92,20 +92,19 @@ void *thread_NICsend(void *args) {
     /* sleep until slot is filled */
     while (slot_info->size < slot_info->cap - 2) ;
     while (i < pcap_num) {
-        // LOG("%lld %ld\n", rdtsc() - last_time, cur_time_interval);
 
         if (rdtsc() - last_time >= cur_time_interval){
             if (slot_info->size <= 0) {
                 LOG("slot_info->size <= 0\n");
                 exit(-1);
             }
-            trigger_slot_send(ctx, slot_info->head);
             last_time = rdtsc();
-
+            trigger_slot_send(ctx, slot_info->head);
+            
             ringbuffer_pop(pcap_info);
             cur_time_interval = ((pcap_info_t *)ringbuffer_front(pcap_info))->time_interval;
             
-            LOG("th 3 pop, ringbuffersize %ld, interval %lld\n", ringbuffer_size(pcap_info), cur_time_interval);
+            // LOG("th 3 pop, ringbuffersize %ld, interval %lld\n", ringbuffer_size(pcap_info), cur_time_interval);
             ++i;
         }
     }
