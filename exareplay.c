@@ -151,6 +151,9 @@ main(int argc, char *argv[])
 
     pcap_num = get_pcap_size(ctx->opts->input_name);
 
+    if (pcap_num > ctx->opts->pcap_cnt)
+        pcap_num = ctx->opts->pcap_cnt;
+
     start_threads();
 
     join_threads();

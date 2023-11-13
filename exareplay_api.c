@@ -19,6 +19,7 @@ exareplay_init()
     ctx->opts->mem_size = DEFAULT_MEM_USE;
     ctx->opts->device = "exanic0";
     ctx->opts->port = 0;
+    ctx->opts->pcap_cnt = 0x7fffffff;
 
     ctx->load_complete = false;
 
@@ -65,7 +66,7 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
     if (argc < 2)
         goto usage_err;
 
-    while ((c = getopt(argc, argv, "r:i:ds:m:h")) != -1) {
+    while ((c = getopt(argc, argv, "r:i:ds:m:c:h")) != -1) {
         switch (c) {
         case 'r':
             ctx->opts->input_name = optarg;
@@ -90,6 +91,9 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
                 ctx->opts->mem_size = atoi(optarg);
             }
             break;
+        case 'c':
+            ctx->opts->pcap_cnt = atoi(optarg);
+            break;
         default:
             goto usage_err;
         }
@@ -100,9 +104,10 @@ usage_err:
     fprintf(stderr, "Usage: %s \n", argv[0]);
     fprintf(stderr, "  -r <input_file>    input file name\n");
     fprintf(stderr, "  -i <device:port>   NIC device and port, for example 'exanic0:0'\n");
-    fprintf(stderr, "  -d                 replay two file at the same time\n");
+    fprintf(stderr, "  -d                 replay two file at the same time, **not supported yet**\n");
     fprintf(stderr, "  -s <interval>      skip large time interval in pcap\n");
     fprintf(stderr, "  -m <memory>        memory to use, default 1G\n");
+    fprintf(stderr, "  -c <pcap_cnt>      num to replay, default all\n");
     exit(-1);
 }
 

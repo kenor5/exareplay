@@ -16,7 +16,7 @@ typedef struct exareplay_opt_s {
     char *device;
     u_int16_t port;
 
-    /* replay two file at the same time */
+    /* -d, replay two file at the same time */
     bool dualmode;
 
     /* skip large time interval in pcap */
@@ -25,8 +25,11 @@ typedef struct exareplay_opt_s {
     /* if 'skip_interval' is set TRUE, interval larger than it will be skipped */
     u_int32_t skip_interval_size;
 
-    /* memory to use */
+    /* -m, memory to use */
     uint32_t mem_size;
+
+    /* -c, num to replay */
+    uint32_t pcap_cnt;
 
 } exareplay_opt_t;
 

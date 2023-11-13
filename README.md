@@ -29,6 +29,8 @@ TODO
 [sudo] exareplay
   -r <input_file>    input file name
   -i <device:port>   NIC device and port, for example 'exanic0:0'
-  -d                 replay two file at the same time
+  -d                 replay two file at the same time, **not supported yet**
   -s <interval>      skip large time interval in pcap
+  -m <memory>        memory to use, default 1G
+  -c <pcap_cnt>      num to replay, default all
 ```
