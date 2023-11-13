@@ -35,7 +35,7 @@ ringbuffer_t *ringbuffer_create(size_t elem_size, size_t capacity) {
     rb->size = 0;
     rb->head = 0;
     rb->tail = 0;
-    rb->used = 1;
+    rb->used = 0;
     rb->data = safe_malloc(elem_size * capacity);
 
     return rb;

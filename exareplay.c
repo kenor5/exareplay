@@ -54,14 +54,18 @@ void *thread_disk2memory(void *args) {
 }
 
 void *thread_memory2NIC(void *args) {
-    return NULL;
     slot_t *slot_info = &ctx->slot_info;
     ringbuffer_t *pcap_info = ctx->pcap_info;
     register uint32_t i = 0;
 
     LOG("thread_memory2NIC started\n");
+
+    while (ringbuffer_tofill(pcap_info) && !ctx->load_complete) {
+        /* wait for ringbuffer to be filled */
+    }
+
     while (i++ < pcap_num) {
-        while (slot_info->size >= (slot_info->cap >> 1) || ringbuffer_useup(pcap_info)) {
+        while (slot_info->size >= slot_info->cap - 2  || ringbuffer_useup(pcap_info)) {
             /* wait for slot to be not full */
         }
 
@@ -73,7 +77,6 @@ void *thread_memory2NIC(void *args) {
 }
 
 void *thread_NICsend(void *args) {
-    return NULL;
     // exanic_tx_t *tx = ctx->device->tx;
     slot_t *slot_info = &ctx->slot_info;
 
@@ -87,11 +90,11 @@ void *thread_NICsend(void *args) {
     LOG("thread_NICsend started\n");
 
     /* sleep until slot is filled */
-    while (slot_info->size < ((slot_info->cap>>1) - 1)) ;
+    while (slot_info->size < slot_info->cap - 2) ;
     while (i < pcap_num) {
         // LOG("%lld %ld\n", rdtsc() - last_time, cur_time_interval);
 
-        if (rdtsc() - last_time >= cur_time_interval && slot_info->size > 0){
+        if (rdtsc() - last_time >= cur_time_interval){
             if (slot_info->size <= 0) {
                 LOG("slot_info->size <= 0\n");
                 exit(-1);
