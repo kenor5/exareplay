@@ -126,7 +126,7 @@ void ringbuffer_clear(ringbuffer_t *rb) {
 
 
 bool ringbuffer_tofill(ringbuffer_t *rb) {
-    return rb->size < (rb->capacity >> 1);
+    return rb->size < rb->capacity - 1;
 }
 
 

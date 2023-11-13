@@ -23,16 +23,15 @@ void *thread_disk2memory(void *args) {
         fprintf(stderr, "error while opening pcap file\n");
         exit(-1);
     }
-
     idx = 0;
     pre_time = 0;
-    while (pcap_next(cap, pkt_header) != NULL) {
+    char *buf_ptr;
+    while ((buf_ptr = pcap_next(cap, pkt_header)) != NULL) {
 
         /* wait for ringbuffer to be not full */
         while (!ringbuffer_tofill(ctx->pcap_info));
 
         LOG("disk2mem %d\n", idx);
-
         pcap_info_t *pcap_info = safe_malloc(sizeof(pcap_info_t));
         pcap_info->len = pkt_header->len;
         pcap_info->time_interval = TIMESPEC_TO_NANOSEC(pkt_header->ts) - pre_time;
@@ -43,20 +42,19 @@ void *thread_disk2memory(void *args) {
                                 ? pcap_info->time_interval - time_delta_burst_start
                                 : pcap_info->time_interval) *
                        ticks_per_nano);
-        memcpy(pcap_info->data, pkt_header, pkt_header->len);
-
+        memcpy(pcap_info->data, buf_ptr, pkt_header->len);
         ringbuffer_push(ctx->pcap_info, pcap_info);
         LOG("th 1 push , ringbuffersize %ld\n", ringbuffer_size(ctx->pcap_info));
         pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
         idx++;
     }
-
     pcap_close(cap);
     ctx->load_complete = true;
     return NULL;
 }
 
 void *thread_memory2NIC(void *args) {
+    return NULL;
     slot_t *slot_info = &ctx->slot_info;
     ringbuffer_t *pcap_info = ctx->pcap_info;
     register uint32_t i = 0;
@@ -75,6 +73,7 @@ void *thread_memory2NIC(void *args) {
 }
 
 void *thread_NICsend(void *args) {
+    return NULL;
     // exanic_tx_t *tx = ctx->device->tx;
     slot_t *slot_info = &ctx->slot_info;
 
