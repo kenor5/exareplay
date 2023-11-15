@@ -1,4 +1,4 @@
-#Exareplay
+# Exareplay
 Exareplay is an utility for replaying pcap which was previously captured by toos like tcpdump and Wireshark.
 Exareplay needs to be used with Exanic NIC.
 It provides high-precision packet replaying, with fluctuation less than 100ns.
@@ -14,16 +14,16 @@ Exareplay is much more than a simple packet replay application. Some of the Exar
 * PF_RING acceleration. Exareplay exploit the packet transmission acceleration offered by PF_RING ZC.
 * Direct-IO disk access. Exareplay uses the Direct IO access to the disks in order to obtain maximum disk-read throughput.
 
-#Dependencies
+# Dependencies
 ```
 libpcap
 libexanic
 ```
 
-#Build and install
+# Build and install
 TODO
 
-#Usage
+# Usage
 ```
 [sudo] exareplay
   -r <input_file>    input file name
