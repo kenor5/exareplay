@@ -36,11 +36,6 @@ thread_disk2nic(void *args)
         exit(-1);
     }
 
-    // /* get pcap header */
-    // pcap_hdr_t *pcap_hdr = (pcap_hdr_t *)file_ptr;
-
-    // file_ptr += sizeof(pcap_hdr_t);
-
     pcap_file_t *cap = mypcap_open_memory(file_ptr, file_size);
     
     int idx = 0;
@@ -48,19 +43,17 @@ thread_disk2nic(void *args)
     char *buf_ptr = NULL;
     pcaprec_hdr_t *pkt_header = NULL;
 
-    unsigned long long start = rdtsc();
     while ((buf_ptr = mypcap_next_memory(&cap, &pkt_header)) != NULL) {
         /* wait for ringbuffer to be not full */
         while (!ringbuffer_tofill(ctx->pcap_info))
             ;
 
-        // LOG("disk2nic %d\n", idx);
         pcap_info_t pcap_info;
         pcap_info.len = pkt_header->len;
         pcap_info.time_interval = TIMESPEC_TO_NANOSEC(pkt_header->ts) - pre_time;
-        pcap_info.time_interval = (long)max(pcap_info.time_interval - time_delta, 0);
+        pcap_info.time_interval = (uint64_t)max(pcap_info.time_interval - time_delta, 0);
         pcap_info.time_interval =
-                (long)(((pcap_info.time_interval > burst_interval_min && pcap_info.time_interval < burst_interval_max)
+                (uint64_t)(((pcap_info.time_interval > burst_interval_min && pcap_info.time_interval < burst_interval_max)
                                 ? pcap_info.time_interval - time_delta_burst_start
                                 : pcap_info.time_interval) *
                        ticks_per_nano);
@@ -72,12 +65,11 @@ thread_disk2nic(void *args)
 
         cap->data_ptr += pkt_header->incl_len;
         // LOG("th 1 push , ringbuffersize %ld, %d\n", ringbuffer_size(ctx->pcap_info), idx);
-        ringbuffer_pop(ctx->pcap_info);
+        // ringbuffer_pop(ctx->pcap_info);
         pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
         idx++;
+        
     }
-    // unsigned long long end = rdtsc();
-    printf("%lld, %lld, %lld\n", (rdtsc()-start), rdtsc(), rdtsc());
     mypcap_close(cap);
 
     return NULL;
@@ -95,11 +87,12 @@ thread_NICsend(void *args)
     register uint32_t i = 0;
 
     LOG("thread_NICsend started\n");
-    return NULL;
+    // return NULL;
     /* sleep until slot is filled */
     while (ringbuffer_tofill(ctx->pcap_info))
-        fprintf(stderr, "waiting\n")
+        
         ;
+    fprintf(stderr, "wait done\n");
     pcap_info = ctx->pcap_info;
     pcap_info_data = ringbuffer_front(pcap_info);
     cur_time_interval = pcap_info_data->time_interval;
@@ -111,7 +104,7 @@ thread_NICsend(void *args)
             trigger_slot_send(ctx, ringbuffer_get_head_idx(ctx->pcap_info));
 
             ringbuffer_pop(pcap_info);
-            fprintf(stderr, "ring buffer size %ld, send %d\n", ringbuffer_size(pcap_info), i);
+            // fprintf(stderr, "ring buffer size %ld, send %d\n", ringbuffer_size(pcap_info), i);
             cur_time_interval = ((pcap_info_t *)ringbuffer_front(pcap_info))->time_interval;
 
             // LOG("th 3 pop, ringbuffersize %ld, interval %lld\n", ringbuffer_size(pcap_info), cur_time_interval);
