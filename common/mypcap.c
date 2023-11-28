@@ -67,19 +67,21 @@ char* mypcap_next(pcap_file_t *pcap, pcaprec_hdr_t *header) {
 /**
  * need to add header->incl_len to data_ptr manually after call this function
 */
-char* mypcap_next_memory(pcap_file_t *pcap, pcaprec_hdr_t **header) {
-    if (pcap->data_len < sizeof(pcaprec_hdr_t)) {
+char* mypcap_next_memory(pcap_file_t **pcap, pcaprec_hdr_t **header) {
+    if ((*pcap)->data_len < sizeof(pcaprec_hdr_t)) {
         return NULL;
     }
 
-    if (pcap->data_ptr == NULL) {
+    if ((*pcap)->data_ptr == NULL) {
         fprintf(stderr, "pcap->data_ptr is NULL\n");
         return NULL;
     }
 
-    *header = pcap->data_ptr;
+    *header = (pcaprec_hdr_t *)(*pcap)->data_ptr;
  
-    pcap->data_ptr += sizeof(pcaprec_hdr_t);
+    (*pcap)->data_ptr += sizeof(pcaprec_hdr_t);
 
-    return pcap->data_ptr;
+    (*pcap)->data_len -= sizeof(pcaprec_hdr_t)+(*header)->incl_len;
+
+    return (*pcap)->data_ptr;
 }

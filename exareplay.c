@@ -47,7 +47,9 @@ thread_disk2nic(void *args)
     uint64_t pre_time = 0;
     char *buf_ptr = NULL;
     pcaprec_hdr_t *pkt_header = NULL;
-    while ((buf_ptr = mypcap_next_memory(cap, &pkt_header)) != NULL) {
+
+    unsigned long long start = rdtsc();
+    while ((buf_ptr = mypcap_next_memory(&cap, &pkt_header)) != NULL) {
         /* wait for ringbuffer to be not full */
         while (!ringbuffer_tofill(ctx->pcap_info))
             ;
@@ -69,10 +71,13 @@ thread_disk2nic(void *args)
         flush_wc_buffers(ctx->device->tx);
 
         cap->data_ptr += pkt_header->incl_len;
-        LOG("th 1 push , ringbuffersize %ld\n", ringbuffer_size(ctx->pcap_info));
+        // LOG("th 1 push , ringbuffersize %ld, %d\n", ringbuffer_size(ctx->pcap_info), idx);
+        ringbuffer_pop(ctx->pcap_info);
         pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
         idx++;
     }
+    // unsigned long long end = rdtsc();
+    printf("%lld, %lld, %lld\n", (rdtsc()-start), rdtsc(), rdtsc());
     mypcap_close(cap);
 
     return NULL;
@@ -90,7 +95,7 @@ thread_NICsend(void *args)
     register uint32_t i = 0;
 
     LOG("thread_NICsend started\n");
-    // return NULL;
+    return NULL;
     /* sleep until slot is filled */
     while (ringbuffer_tofill(ctx->pcap_info))
         fprintf(stderr, "waiting\n")
