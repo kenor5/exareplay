@@ -17,10 +17,6 @@ slot_init(exareplay_t *ctx)
         chunk->flags = 0;
     }
 
-    ctx->slot_info.cap = TX_SLOT_NUM;
-    ctx->slot_info.size = 0;
-    ctx->slot_info.head = 0;
-    ctx->slot_info.tail = 0;
 }
 
 void
@@ -42,27 +38,18 @@ get_slot_payload(exanic_tx_t *tx, int slot)
 }
 
 void
-fill_slot(exareplay_t *ctx)
+fill_slot(exareplay_t *ctx, char *data_ptr)
 {
-    int slot_idx = ctx->slot_info.tail;
+    int slot_idx = ringbuffer_get_head_idx(ctx->pcap_info);
 
     char *payload = get_slot_payload(ctx->device->tx, slot_idx);
 
-    pcap_info_t *pcap_info = ringbuffer_next_use(ctx->pcap_info);
+    pcap_info_t *pcap_info = ringbuffer_front(ctx->pcap_info);
 
-    /* move from memory to slot, increase used ptr */
+    /* move from memory to slot */
     set_slot_len(ctx->device->tx, slot_idx, pcap_info->len);
-    memcpy(payload, pcap_info->data, pcap_info->len);
 
-    ringbuffer_used_inc(ctx->pcap_info);
-
-    /* ctx->slot_info.size++ */
-    uint32_t oldsize = ctx->slot_info.size;
-    while (!__sync_bool_compare_and_swap(&ctx->slot_info.size, oldsize, oldsize + 1)) {
-        oldsize = ctx->slot_info.size;
-    }
-
-    ctx->slot_info.tail = (ctx->slot_info.tail + 1) % ctx->slot_info.cap;
+    memcpy(payload, data_ptr, pcap_info->len);
 }
 
 void
@@ -84,20 +71,5 @@ trigger_slot_send(exareplay_t *ctx, int slot)
     int offset = slot * TX_SLOT_SIZE;
     tx->exanic->registers[REG_PORT_INDEX(tx->port_number, REG_PORT_TX_COMMAND)] = offset + tx->buffer_offset;
 
-    /* ctx->slot_info.size--; */
-    uint32_t oldsize = ctx->slot_info.size;
-    while (!__sync_bool_compare_and_swap(&ctx->slot_info.size, oldsize, oldsize - 1)) {
-        oldsize = ctx->slot_info.size;
-    }
-    ctx->slot_info.head = (ctx->slot_info.head + 1) % ctx->slot_info.cap;
-}
 
-void
-slot_preload(exareplay_t *ctx)
-{
-    for (int i = 0; i < TX_SLOT_NUM; ++i) {
-        fill_slot(ctx);
-    }
-
-    flush_wc_buffers(ctx->device->tx);
 }

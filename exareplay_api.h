@@ -46,8 +46,8 @@ typedef struct pcap_info_s {
     /* pcap timestamp interval, in tick format*/
     u_int64_t time_interval;
 
-    /* pcap data */
-    char data[MTU];
+    // /* pcap data */
+    // char data[MTU];
 
 } pcap_info_t;
 
@@ -65,9 +65,6 @@ typedef struct exareplay_s {
 
     ringbuffer_t *pcap_info;
 
-    slot_t slot_info;
-    /* whether disk data is loaded, only set in thread_disk2memory */
-    volatile bool load_complete;
 } exareplay_t;
 
 exareplay_t *exareplay_init();

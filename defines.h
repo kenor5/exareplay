@@ -21,7 +21,7 @@
 #define TX_SLOT_NUM 31
 #define DEFAULT_MEM_USE 0x100000
 
-#define THREAD_NUM 3
+#define THREAD_NUM 2
 
 #define RING_BUFFER_ELEMENT_SIZE 0x800 /* must be a power of 2 */
 #define BANDWIDTH 10
@@ -65,47 +65,47 @@
 #define MICROSEC_TO_SEC(x) (x / 1000000)
 #define NANOSEC_TO_SEC(x) ((u_int64_t)x / 1000000000)
 
-#define TIMEVAL_TO_MILLISEC(x) (((x)->tv_sec * 1000) + ((x)->tv_usec / 1000))
-#define TIMEVAL_TO_MICROSEC(x) (((x)->tv_sec * 1000000) + (x)->tv_usec)
-#define TIMEVAL_TO_NANOSEC(x) ((u_int64_t)((x)->tv_sec * 1000000000) + ((u_int64_t)(x)->tv_usec * 1000))
+#define TIMEVAL_TO_MILLISEC(x) (((x).tv_sec * 1000) + ((x).tv_usec / 1000))
+#define TIMEVAL_TO_MICROSEC(x) (((x).tv_sec * 1000000) + (x).tv_usec)
+#define TIMEVAL_TO_NANOSEC(x) ((u_int64_t)((x).tv_sec * 1000000000) + ((u_int64_t)(x).tv_usec * 1000))
 #define TIMSTAMP_TO_MICROSEC(x) (TIMEVAL_TO_MICROSEC(x))
 
 #define MILLISEC_TO_TIMEVAL(x, tv)                                                                                     \
     do {                                                                                                               \
-        (tv)->tv_sec = (x) / 1000;                                                                                     \
-        (tv)->tv_usec = (x * 1000) - ((tv)->tv_sec * 1000000);                                                         \
+        (tv).tv_sec = (x) / 1000;                                                                                     \
+        (tv).tv_usec = (x * 1000) - ((tv).tv_sec * 1000000);                                                         \
     } while (0)
 
 #define MICROSEC_TO_TIMEVAL(x, tv)                                                                                     \
     do {                                                                                                               \
-        (tv)->tv_sec = (x) / 1000000;                                                                                  \
-        (tv)->tv_usec = (x) - ((tv)->tv_sec * 1000000);                                                                \
+        (tv).tv_sec = (x) / 1000000;                                                                                  \
+        (tv).tv_usec = (x) - ((tv).tv_sec * 1000000);                                                                \
     } while (0)
 
 #define NANOSEC_TO_TIMEVAL(x, tv)                                                                                      \
     do {                                                                                                               \
-        (tv)->tv_sec = (x) / 1000000000;                                                                               \
-        (tv)->tv_usec = ((x) % 1000000000) / 1000;                                                                     \
+        (tv).tv_sec = (x) / 1000000000;                                                                               \
+        (tv).tv_usec = ((x) % 1000000000) / 1000;                                                                     \
     } while (0)
 
 #define NANOSEC_TO_TIMESPEC(x, ts)                                                                                     \
     do {                                                                                                               \
-        (ts)->tv_sec = (x) / 1000000000;                                                                               \
-        (ts)->tv_nsec = (x) % 1000000000;                                                                              \
+        (ts).tv_sec = (x) / 1000000000;                                                                               \
+        (ts).tv_nsec = (x) % 1000000000;                                                                              \
     } while (0)
 
-#define TIMESPEC_TO_MILLISEC(x) (((x)->tv_sec * 1000) + ((x)->tv_nsec / 1000000))
-#define TIMESPEC_TO_MICROSEC(x) (((x)->tv_sec * 1000000) + (x)->tv_nsec / 1000)
+#define TIMESPEC_TO_MILLISEC(x) (((x).tv_sec * 1000) + ((x).tv_nsec / 1000000))
+#define TIMESPEC_TO_MICROSEC(x) (((x).tv_sec * 1000000) + (x).tv_nsec / 1000)
 #define TIMESPEC_TO_NANOSEC(x) ((u_int64_t)((x).tv_sec * 1000000000) + ((u_int64_t)(x).tv_usec))
 
 #define TIMEVAL_SET(a, b)                                                                                              \
     do {                                                                                                               \
-        (a)->tv_sec = (b)->tv_sec;                                                                                     \
-        (a)->tv_usec = (b)->tv_usec;                                                                                   \
+        (a).tv_sec = (b).tv_sec;                                                                                     \
+        (a).tv_usec = (b).tv_usec;                                                                                   \
     } while (0)
 
 #define TIMESPEC_SET(a, b)                                                                                             \
     do {                                                                                                               \
-        (a)->tv_sec = (b)->tv_sec;                                                                                     \
-        (a)->tv_nsec = (b)->tv_nsec;                                                                                   \
+        (a).tv_sec = (b).tv_sec;                                                                                     \
+        (a).tv_nsec = (b).tv_nsec;                                                                                   \
     } while (0)

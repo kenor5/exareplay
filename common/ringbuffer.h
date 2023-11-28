@@ -14,6 +14,8 @@ void ringbuffer_pop(ringbuffer_t *rb);
 size_t ringbuffer_capacity(ringbuffer_t *rb);
 size_t ringbuffer_size(ringbuffer_t *rb);
 
+int ringbuffer_get_head_idx(ringbuffer_t *rb);
+
 bool ringbuffer_tofill(ringbuffer_t *rb);
 
 void *ringbuffer_front(ringbuffer_t *rb);

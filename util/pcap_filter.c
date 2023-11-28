@@ -61,13 +61,15 @@ int main(int argc, char* argv[])
 	const char* input_file = NULL, *output_file = NULL;
 	int interval = 15;
 	int size_limit = 70;
+	int num_limit = 2147483647;
+	int offset = 0;
 	bool udp_only = true;
 	bool skip_non_trading_only = true;
 	char errbuf[PCAP_ERRBUF_SIZE];
 
 	if (argc < 3)
 		goto usage_error;
-	while ((c = getopt(argc, argv, "i:w:ulc:hs:d")) != -1)
+	while ((c = getopt(argc, argv, "i:w:ulc:hs:n:o:d")) != -1)
 	    {
 		switch(c)
 		{
@@ -91,6 +93,12 @@ int main(int argc, char* argv[])
 				break;
 			case 'd':
 				interval = SECPERDAY;
+				break;
+			case 'n':
+				num_limit = atoi(optarg);
+				break;
+			case 'o':
+				offset = atoi(optarg);
 				break;
 			default:
 				goto usage_error;
@@ -121,7 +129,12 @@ int main(int argc, char* argv[])
 
 	LOG("|----------------- intervals ---------------|\n");
 
+	while (offset--)
+		(void)pcap_next(cap, &pkthdr);
 	while ((data = pcap_next(cap, &pkthdr))) {
+		if (pcap_num - drop_num >= num_limit) {
+			break;
+		}
 		packetHandler(&pkthdr, 
 						data, 
 						udp_only, 
@@ -147,6 +160,8 @@ usage_error:
 	fprintf (stderr, "  -c: specify min interval, default 15min \n");
 	fprintf (stderr, "  -s: filter packet which size is less than size_limit, default 70\n");
 	fprintf (stderr, "  -d: disable filter by time interval\n");
+	fprintf (stderr, "  -n: specify max pcap num to save\n");
+	fprintf (stderr, "  -o: ignore leading o nums of pcap");
 }
 
 

@@ -20,7 +20,6 @@ exareplay_init()
     ctx->opts->port = 0;
     ctx->opts->pcap_cnt = 0x7fffffff;
 
-    ctx->load_complete = false;
 
     return ctx;
 }
@@ -113,8 +112,7 @@ usage_err:
 void
 pcap_info_init(exareplay_t *ctx)
 {
-    uint32_t memory_limit = ctx->opts->mem_size;
-    uint32_t pcap_size = memory_limit / sizeof(pcap_info_t);
+    uint32_t pcap_size = 16;
 
     /* malloc pcap memory */
     ctx->pcap_info = ringbuffer_create(sizeof(pcap_info_t), pcap_size);

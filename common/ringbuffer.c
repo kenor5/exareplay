@@ -63,7 +63,7 @@ void
 ringbuffer_push(ringbuffer_t *rb, void *elem)
 {
     u_int32_t cap = rb->capacity;
-    u_int32_t elem_size = rb->elem_size;
+    // u_int32_t elem_size = rb->elem_size;
     memcpy(rb->data + MOD(rb->tail, cap) * rb->elem_size, elem, rb->elem_size);
     rb->tail = rb->tail + 1;
 
@@ -162,4 +162,8 @@ bool
 ringbuffer_useup(ringbuffer_t *rb)
 {
     return rb->used > rb->tail;
+}
+
+int ringbuffer_get_head_idx(ringbuffer_t *rb) {
+    return MOD(rb->head, rb->capacity);
 }

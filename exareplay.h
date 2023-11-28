@@ -10,9 +10,7 @@
 #define DEBUG
 #endif
 
-void *thread_disk2memory(void *args);
-
-void *thread_memory2NIC(void *);
+void *thread_disk2nic(void *args);
 
 void *thread_NICsend(void *);
 
