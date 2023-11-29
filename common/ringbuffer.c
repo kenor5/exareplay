@@ -3,7 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define MOD(a, b) ((a) & ((b)-1))
+// #define MOD(a, b) ((a) & ((b)-1))
+#define MOD(a, b) ((a)%(b))
 
 struct ringbuffer {
     /* length of each element */
@@ -29,9 +30,9 @@ ringbuffer_create(size_t elem_size, size_t capacity)
 {
     ringbuffer_t *rb = safe_malloc(sizeof(ringbuffer_t));
     /* if capacity is not power of 2, align*/
-    while (capacity & (capacity - 1)) {
-        capacity = capacity & (capacity - 1);
-    }
+    // while (capacity & (capacity - 1)) {
+    //     capacity = capacity & (capacity - 1);
+    // }
 
     rb->elem_size = elem_size;
     rb->capacity = capacity;

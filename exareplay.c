@@ -43,36 +43,31 @@ thread_disk2nic(void *args)
     char *buf_ptr = NULL;
     pcaprec_hdr_t *pkt_header = NULL;
     pcap_info_t pcap_info;
-    // unsigned long long start_time;
     while ((buf_ptr = mypcap_next_memory(&cap, &pkt_header)) != NULL) {
         /* wait for ringbuffer to be not full */
         while (!ringbuffer_tofill(ctx->pcap_info))
             ;
-        // start_time = rdtsc();
         if (ctx->opts->remove_fcs)
             pcap_info.len = pkt_header->len - 4;
         else
             pcap_info.len = pkt_header->len;
         
         pcap_info.time_interval = TIMESPEC_TO_NANOSEC(pkt_header->ts) - pre_time;
-        pcap_info.time_interval = (uint64_t)max(pcap_info.time_interval - time_delta, 0);
+        pcap_info.time_interval = pcap_info.time_interval - time_delta > 0x7fffffff ? 0 : (pcap_info.time_interval - time_delta);  /* prevent overflow */
         pcap_info.time_interval =
                 (uint64_t)(((pcap_info.time_interval > burst_interval_min && pcap_info.time_interval < burst_interval_max)
                                 ? pcap_info.time_interval - time_delta_burst_start
                                 : pcap_info.time_interval) *
                        ticks_per_nano);
-
         ringbuffer_push(ctx->pcap_info, &pcap_info);
 
         fill_slot(ctx, cap->data_ptr);
         flush_wc_buffers(ctx->device->tx);
 
         cap->data_ptr += pkt_header->incl_len;
-        ringbuffer_pop(ctx->pcap_info);
         pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
         idx++;
 
-        // LOG("%lld\n", rdtsc() - start_time);
     }
     mypcap_close(cap);
 
@@ -91,7 +86,7 @@ thread_NICsend(void *args)
     register uint32_t i = 0;
 
     LOG("thread_NICsend started\n");
-    return NULL;
+    // return NULL;
     /* sleep until slot is filled */
     while (ringbuffer_tofill(ctx->pcap_info))
         

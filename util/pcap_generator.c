@@ -7,7 +7,7 @@
 
 #include "pcap_dump.h"
 
-#define MAX_LINE_LENGTH 256
+#define MAX_LINE_LENGTH 1000
 
 /**
  * 
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
 	const char *input = NULL, *output = NULL;
 	char *token;
 	char line[MAX_LINE_LENGTH];
-	int pcap_num, cnt = 0;
+	int pcap_num = MAX_LINE_LENGTH, cnt = 0;
 	char type[MAX_LINE_LENGTH];
 	int interval[MAX_LINE_LENGTH];
 	int pcap_len[MAX_LINE_LENGTH];
@@ -35,11 +35,13 @@ int main(int argc, char *argv[]){
 	input = argv[1];
 	output = argv[2];
 
+
 	for (int i = 0; i < MAX_LINE_LENGTH; ++i) {
 		type[i] = 'u';
 		interval[i] = 1;
-		pcap_len[i] = 1000;
+		pcap_len[i] = 1200;
 	}
+#ifdef USE_INPUT
 
 	FILE *ifile = fopen(input, "r");
 	if (!ifile) {
@@ -80,7 +82,7 @@ int main(int argc, char *argv[]){
 		token = strtok(NULL, " ");
 		cnt ++;
 	}
-
+#endif
 
 	char *data = NULL;
 	struct pcap_pkthdr pkthdr;
@@ -125,8 +127,8 @@ int main(int argc, char *argv[]){
 			data[49] = 0x10;
 		}
 
-		pkthdr.ts.tv_usec = 0;
-		pkthdr.ts.tv_sec = acc_sec;
+		pkthdr.ts.tv_usec = cnt*1500;
+		pkthdr.ts.tv_sec = 0;
 
 		if (fd) pd_write(fd, (char*)data, pcap_len[cnt], pkthdr.ts);
 		printf("%d\n", pcap_len[cnt]);
@@ -150,11 +152,11 @@ open_err:
 
 read_err:
 	fprintf(stderr, "read file error\n");
-	fclose(ifile);
+	// fclose(ifile);
 	return -1;
 
 oversized_err:
 	fprintf(stderr, "input pcap num too large\n");
-	fclose(ifile);
+	// fclose(ifile);
 	return -1;
 }

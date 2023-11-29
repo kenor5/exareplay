@@ -117,7 +117,7 @@ usage_err:
 void
 pcap_info_init(exareplay_t *ctx)
 {
-    uint32_t pcap_size = 16;
+    uint32_t pcap_size = 31;
 
     /* malloc pcap memory */
     ctx->pcap_info = ringbuffer_create(sizeof(pcap_info_t), pcap_size);
