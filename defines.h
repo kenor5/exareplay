@@ -29,6 +29,7 @@
 #define time_delta_burst_start 1390
 #define burst_interval_min 480000000
 #define burst_interval_max 510000000
+#define len_fcs 4
 
 /* when NUM/2 is sent out, preload first one*/
 #define update_slot_until (TX_SLOT_NUM / 2)

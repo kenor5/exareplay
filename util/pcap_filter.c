@@ -112,7 +112,9 @@ int main(int argc, char* argv[])
 	LOG("  min size:                   %d\n", size_limit);
 	LOG("  udp only:                   %s\n", udp_only?"True":"False");
 	LOG("  skip non-trading only:      %s\n", skip_non_trading_only?"True":"False");
-	LOG("  disable filter by interval  %s\n\n", size_limit==SECPERDAY?"True":"False");
+	LOG("  disable filter by interval  %s\n", size_limit==SECPERDAY?"True":"False");
+	LOG("  max pcap num to save:       %d\n", num_limit);
+	LOG("  ignore leading o nums:      %d\n\n", offset);
 
 	int fd = pd_open(output_file);
 	if (!fd) {

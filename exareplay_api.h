@@ -31,6 +31,9 @@ typedef struct exareplay_opt_s {
     /* -c, num to replay */
     uint32_t pcap_cnt;
 
+    /* -E, remove fcs*/
+    bool remove_fcs;
+
 } exareplay_opt_t;
 
 typedef struct device_s {

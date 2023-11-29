@@ -1,6 +1,7 @@
 #include "ringbuffer.h"
 #include "utils.h"
 #include <string.h>
+#include <stdio.h>
 
 #define MOD(a, b) ((a) & ((b)-1))
 
@@ -84,6 +85,11 @@ ringbuffer_pop(ringbuffer_t *rb)
     rb->head = rb->head + 1;
     /* atomically decrease size */
     size_t size = rb->size;
+    if (size <= 0) {
+        fprintf(stderr, "ringbuffer_pop: size <= 0\n");
+        // return;
+        exit(-1);
+    }
     while (!__sync_bool_compare_and_swap(&rb->size, size, size - 1)) {
         size = rb->size;
     }
@@ -128,6 +134,12 @@ ringbuffer_next_use(ringbuffer_t *rb)
     return rb->data + MOD(rb->used, rb->capacity) * rb->elem_size;
 }
 
+int
+ringbuffer_get_use_idx(ringbuffer_t *rb)
+{
+    return MOD(rb->used, rb->capacity);
+}
+
 /**
  * Clear the ringbuffer
  * @param rb pointer to the ringbuffer
@@ -143,7 +155,7 @@ ringbuffer_clear(ringbuffer_t *rb)
 bool
 ringbuffer_tofill(ringbuffer_t *rb)
 {
-    return rb->size < rb->capacity - 2;
+    return rb->size < rb->capacity - 3;
 }
 
 bool

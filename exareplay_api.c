@@ -19,6 +19,7 @@ exareplay_init()
     ctx->opts->device = "exanic0";
     ctx->opts->port = 0;
     ctx->opts->pcap_cnt = 0x7fffffff;
+    ctx->opts->remove_fcs = false;
 
 
     return ctx;
@@ -64,7 +65,7 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
     if (argc < 2)
         goto usage_err;
 
-    while ((c = getopt(argc, argv, "r:i:ds:m:c:h")) != -1) {
+    while ((c = getopt(argc, argv, "r:i:ds:m:c:Eh")) != -1) {
         switch (c) {
         case 'r':
             ctx->opts->input_name = optarg;
@@ -92,6 +93,9 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
         case 'c':
             ctx->opts->pcap_cnt = atoi(optarg);
             break;
+        case 'E':
+            ctx->opts->remove_fcs = true;
+            break;
         default:
             goto usage_err;
         }
@@ -106,6 +110,7 @@ usage_err:
     fprintf(stderr, "  -s <interval>      skip large time interval in pcap\n");
     fprintf(stderr, "  -m <memory>        memory to use, default 1G\n");
     fprintf(stderr, "  -c <pcap_cnt>      num to replay, default all\n");
+    fprintf(stderr, "  -E                 remove fcs\n");
     exit(-1);
 }
 

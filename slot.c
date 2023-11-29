@@ -40,16 +40,20 @@ get_slot_payload(exanic_tx_t *tx, int slot)
 void
 fill_slot(exareplay_t *ctx, char *data_ptr)
 {
-    int slot_idx = ringbuffer_get_head_idx(ctx->pcap_info);
+    int slot_idx = ringbuffer_get_use_idx(ctx->pcap_info);
 
     char *payload = get_slot_payload(ctx->device->tx, slot_idx);
 
-    pcap_info_t *pcap_info = ringbuffer_front(ctx->pcap_info);
+    pcap_info_t *pcap_info = ringbuffer_next_use(ctx->pcap_info);
 
     /* move from memory to slot */
     set_slot_len(ctx->device->tx, slot_idx, pcap_info->len);
 
     memcpy(payload, data_ptr, pcap_info->len);
+
+    ringbuffer_used_inc(ctx->pcap_info);
+
+    // LOG("fill_slot: slot_idx: %d, len: %d\n", slot_idx, pcap_info->len);
 }
 
 void
@@ -71,5 +75,5 @@ trigger_slot_send(exareplay_t *ctx, int slot)
     int offset = slot * TX_SLOT_SIZE;
     tx->exanic->registers[REG_PORT_INDEX(tx->port_number, REG_PORT_TX_COMMAND)] = offset + tx->buffer_offset;
 
-
+    // LOG("trigger_slot_send: slot: %d, \n", slot);
 }

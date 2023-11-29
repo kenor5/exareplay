@@ -29,3 +29,5 @@ bool ringbuffer_empty(ringbuffer_t *rb);
 void ringbuffer_used_inc(ringbuffer_t *rb);
 
 bool ringbuffer_useup(ringbuffer_t *rb);
+
+int ringbuffer_get_use_idx(ringbuffer_t *rb);
