@@ -9,6 +9,7 @@ exareplay_init()
     exareplay_t *ctx;
     ctx = safe_malloc(sizeof(exareplay_t));
     ctx->opts = safe_malloc(sizeof(exareplay_opt_t));
+
     /* send one file */
     ctx->opts->dualmode = false;
     /* disable skip any interval*/
@@ -20,7 +21,15 @@ exareplay_init()
     ctx->opts->port = 0;
     ctx->opts->pcap_cnt = 0x7fffffff;
     ctx->opts->remove_fcs = false;
-
+    ctx->pcap_mem_loaded = false;
+    ctx->pcap_mem_size = DEFAULT_MEM_USE / sizeof(pcap_info_t);
+    ctx->pcap_mem_use_ptr = 0;
+    ctx->pcap_mem_store_ptr = 0;
+    ctx->slot_info = (slot_t){
+        .cap = TX_SLOT_NUM,
+        .head = 0,
+        .tail = 0,
+    };
 
     return ctx;
 }
@@ -89,6 +98,7 @@ exareplay_parse_args(exareplay_t *ctx, int argc, char *argv[])
             } else {
                 ctx->opts->mem_size = atoi(optarg);
             }
+            ctx->pcap_mem_size = ctx->opts->mem_size / sizeof(pcap_info_t);
             break;
         case 'c':
             ctx->opts->pcap_cnt = atoi(optarg);
@@ -117,16 +127,14 @@ usage_err:
 void
 pcap_info_init(exareplay_t *ctx)
 {
-    uint32_t pcap_size = 31;
-
     /* malloc pcap memory */
-    ctx->pcap_info = ringbuffer_create(sizeof(pcap_info_t), pcap_size);
+    ctx->pcap_info = safe_malloc(sizeof(pcap_info_t) * (ctx->opts->mem_size/sizeof(pcap_info_t)));
 }
 
 void
 pcap_info_free(exareplay_t *ctx)
 {
-    ringbuffer_destroy(ctx->pcap_info);
+    safe_free(ctx->pcap_info);
 }
 
 uint32_t

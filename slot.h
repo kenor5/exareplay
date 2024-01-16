@@ -8,7 +8,7 @@ void set_slot_len(exanic_tx_t *tx, int slot_idx, uint16_t len);
 
 void slot_init(exareplay_t *);
 
-void fill_slot(exareplay_t *, char*);
+uint64_t fill_slot(exareplay_t *);
 
 /*
  * Force the write combining buffers to be flushed after pushing all of the

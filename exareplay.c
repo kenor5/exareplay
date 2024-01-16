@@ -12,8 +12,19 @@ pthread_t tid[THREAD_NUM];
 
 uint32_t pcap_num;
 
+uint64_t get_time_interval(uint64_t cur_time, uint64_t pre_time) {
+    uint64_t interval = cur_time - pre_time;
+    interval = interval - time_delta > 0x7fffffff ? 0 : (interval - time_delta);  /* prevent overflow */
+    interval =
+                (uint64_t)(((interval > burst_interval_min && interval < burst_interval_max)
+                                ? interval - time_delta_burst_start
+                                : interval) *
+                       ticks_per_nano);
+    return interval;
+}
+
 void *
-thread_disk2nic(void *args)
+thread_disk2mem(void *args)
 {
     const char *filename = ctx->opts->input_name;
     
@@ -23,51 +34,57 @@ thread_disk2nic(void *args)
         fprintf(stderr, "open %s failed\n", filename);
         exit(-1);
     }
-
-    /* get file size */
-    struct stat statbuf;
-    fstat(fd, &statbuf);
-    size_t file_size = statbuf.st_size;
-
-    /* mmap file */
-    char *file_ptr = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (file_ptr == MAP_FAILED) {
-        fprintf(stderr, "mmap %s failed\n", filename);
-        exit(-1);
-    }
-
-    pcap_file_t *cap = mypcap_open_memory(file_ptr, file_size);
     
+    pcap_file_t *cap = mypcap_open(filename);
     int idx = 0;
     uint64_t pre_time = 0;
-    char *buf_ptr = NULL;
-    pcaprec_hdr_t *pkt_header = NULL;
-    pcap_info_t pcap_info;
-    while ((buf_ptr = mypcap_next_memory(&cap, &pkt_header)) != NULL) {
-        /* wait for ringbuffer to be not full */
-        while (!ringbuffer_tofill(ctx->pcap_info))
-            ;
+    pcaprec_hdr_t *pkt_header = safe_malloc(sizeof(pcaprec_hdr_t));
+    pcap_info_t *pcap_info;
+    int res;
+    int size = ctx->pcap_mem_size;
+
+    for (int i = 0; i < size; ++i) {
+        pcap_info = &ctx->pcap_info[i];
+        res = mypcap_readnext(cap, pkt_header, pcap_info->data);
+        if (res == ERROR) {
+            fprintf(stderr, "read pcap file error\n");
+            exit(-1);
+        }else if (res == EOF_REACHED)
+            break;
+
         if (ctx->opts->remove_fcs)
-            pcap_info.len = pkt_header->len - 4;
+                pcap_info->len = pkt_header->len - 4;
         else
-            pcap_info.len = pkt_header->len;
+            pcap_info->len = pkt_header->len;
         
-        pcap_info.time_interval = TIMESPEC_TO_NANOSEC(pkt_header->ts) - pre_time;
-        pcap_info.time_interval = pcap_info.time_interval - time_delta > 0x7fffffff ? 0 : (pcap_info.time_interval - time_delta);  /* prevent overflow */
-        pcap_info.time_interval =
-                (uint64_t)(((pcap_info.time_interval > burst_interval_min && pcap_info.time_interval < burst_interval_max)
-                                ? pcap_info.time_interval - time_delta_burst_start
-                                : pcap_info.time_interval) *
-                       ticks_per_nano);
-        ringbuffer_push(ctx->pcap_info, &pcap_info);
+        pcap_info->time_interval = get_time_interval(TIMESPEC_TO_NANOSEC(pkt_header->ts), pre_time);
 
-        fill_slot(ctx, cap->data_ptr);
-        flush_wc_buffers(ctx->device->tx);
-
-        cap->data_ptr += pkt_header->incl_len;
         pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
         idx++;
+    }
+    ctx->pcap_mem_loaded = true;
 
+    while (true) {
+        if (ctx->pcap_mem_use_ptr > ctx->pcap_mem_store_ptr + 10) {
+            pcap_info = &ctx->pcap_info[(ctx->pcap_mem_store_ptr++)%size];
+            res = mypcap_readnext(cap, pkt_header, pcap_info->data);
+            if (res == ERROR) {
+                fprintf(stderr, "read pcap file error\n");
+                exit(-1);
+            }else if (res == EOF_REACHED)
+                break;
+
+            if (ctx->opts->remove_fcs)
+                pcap_info->len = pkt_header->len - 4;
+            else
+                pcap_info->len = pkt_header->len;
+            
+            pcap_info->time_interval = get_time_interval(TIMESPEC_TO_NANOSEC(pkt_header->ts), pre_time);
+
+            pre_time = TIMESPEC_TO_NANOSEC(pkt_header->ts);
+            idx++;
+
+        }
     }
     mypcap_close(cap);
 
@@ -77,38 +94,43 @@ thread_disk2nic(void *args)
 void *
 thread_NICsend(void *args)
 {
-
-    ringbuffer_t *pcap_info;
-    pcap_info_t *pcap_info_data;
+    pcap_info_t *pcap_info;
+    slot_t *slot_info = &ctx->slot_info;
+    uint64_t *slot_time_interval = safe_malloc(sizeof(uint64_t) * TX_SLOT_NUM);
 
     register uint64_t last_time = 0;
     register uint64_t cur_time_interval;
     register uint32_t i = 0;
 
     LOG("thread_NICsend started\n");
-    // return NULL;
-    /* sleep until slot is filled */
-    while (ringbuffer_tofill(ctx->pcap_info))
-        
-        ;
-    fprintf(stderr, "wait done\n");
+
     pcap_info = ctx->pcap_info;
-    pcap_info_data = ringbuffer_front(pcap_info);
-    cur_time_interval = pcap_info_data->time_interval;
+    cur_time_interval = 0;
+
+    /* wait until memory loaded */
+    while (!ctx->pcap_mem_loaded)
+        ;
+    
+    /* load slot */
+    for (i = 0; i < TX_SLOT_NUM-2; ++i) {
+        slot_time_interval[i] = fill_slot(ctx);
+    }
+    flush_wc_buffers(ctx->device->tx);
+
+    i = 0;
     while (i < pcap_num) {
 
-        if (rdtsc() - last_time >= cur_time_interval) {
+        while (rdtsc() - last_time < cur_time_interval)
+            ;
 
-            last_time = rdtsc();
-            trigger_slot_send(ctx, ringbuffer_get_head_idx(ctx->pcap_info));
+        last_time = rdtsc();
+        trigger_slot_send(ctx, slot_info->head % TX_SLOT_NUM);
+        slot_info->head++;
 
-            ringbuffer_pop(pcap_info);
-            // fprintf(stderr, "ring buffer size %ld, send %d\n", ringbuffer_size(pcap_info), i);
-            cur_time_interval = ((pcap_info_t *)ringbuffer_front(pcap_info))->time_interval;
+        cur_time_interval = slot_time_interval[slot_info->head % TX_SLOT_NUM];
+        slot_time_interval[(slot_info->tail-1) % TX_SLOT_NUM]= fill_slot(ctx);
 
-            // LOG("th 3 pop, ringbuffersize %ld, interval %lld\n", ringbuffer_size(pcap_info), cur_time_interval);
-            ++i;
-        }
+        ++i;
     }
     return NULL;
 }
@@ -116,7 +138,7 @@ thread_NICsend(void *args)
 void
 start_threads()
 {
-    pthread_create(&tid[0], NULL, thread_disk2nic, NULL);
+    pthread_create(&tid[0], NULL, thread_disk2mem, NULL);
     frank_pthread_single_cpu_affinity_set(0, tid[0]);
 
     pthread_create(&tid[1], NULL, thread_NICsend, NULL);

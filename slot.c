@@ -37,23 +37,22 @@ get_slot_payload(exanic_tx_t *tx, int slot)
     return chunk->payload + padding;
 }
 
-void
-fill_slot(exareplay_t *ctx, char *data_ptr)
+uint64_t
+fill_slot(exareplay_t *ctx)
 {
-    int slot_idx = ringbuffer_get_use_idx(ctx->pcap_info);
-
+    int slot_idx = ctx->slot_info.tail % TX_SLOT_NUM;
     char *payload = get_slot_payload(ctx->device->tx, slot_idx);
-
-    pcap_info_t *pcap_info = ringbuffer_next_use(ctx->pcap_info);
+    pcap_info_t *pcap_info = &ctx->pcap_info[ctx->pcap_mem_use_ptr % ctx->pcap_mem_size];
 
     /* move from memory to slot */
     set_slot_len(ctx->device->tx, slot_idx, pcap_info->len);
 
-    memcpy(payload, data_ptr, pcap_info->len);
+    memcpy(payload, pcap_info->data, pcap_info->len);
 
-    ringbuffer_used_inc(ctx->pcap_info);
-
-    // LOG("fill_slot: slot_idx: %d, len: %d\n", slot_idx, pcap_info->len);
+    ctx->slot_info.tail ++;
+    ctx->pcap_mem_use_ptr ++;
+    
+    return pcap_info->time_interval;
 }
 
 void

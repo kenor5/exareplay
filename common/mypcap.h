@@ -82,4 +82,6 @@ void mypcap_close(pcap_file_t *pcap);
 */
 char* mypcap_next(pcap_file_t *pcap, pcaprec_hdr_t *header);
 
-char* mypcap_next_memory(pcap_file_t **pcap, pcaprec_hdr_t **header);
+int mypcap_readnext(pcap_file_t *pcap, pcaprec_hdr_t *header, char* buffer);
+
+char* mypcap_next_memory(pcap_file_t *pcap, pcaprec_hdr_t *header);

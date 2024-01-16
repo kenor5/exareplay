@@ -31,6 +31,10 @@
 #define burst_interval_max 510000000
 #define len_fcs 4
 
+#define SUCCESS 0
+#define EOF_REACHED 1
+#define ERROR -1
+
 /* when NUM/2 is sent out, preload first one*/
 #define update_slot_until (TX_SLOT_NUM / 2)
 #define cur_update (TX_SLOT_NUM - update_slot_until - 1)

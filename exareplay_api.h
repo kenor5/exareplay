@@ -49,14 +49,13 @@ typedef struct pcap_info_s {
     /* pcap timestamp interval, in tick format*/
     u_int64_t time_interval;
 
-    // /* pcap data */
-    // char data[MTU];
+    /* pcap data */
+    char data[MTU];
 
 } pcap_info_t;
 
 typedef struct slot_s {
     uint32_t cap;
-    volatile uint32_t size;
     uint32_t head;
     uint32_t tail;
 } slot_t;
@@ -66,7 +65,14 @@ typedef struct exareplay_s {
 
     device_t *device;
 
-    ringbuffer_t *pcap_info;
+    pcap_info_t *pcap_info;
+
+    volatile bool pcap_mem_loaded;
+    uint32_t pcap_mem_size;
+    volatile uint32_t pcap_mem_use_ptr;
+    volatile uint32_t pcap_mem_store_ptr;
+
+    slot_t slot_info;
 
 } exareplay_t;
 
